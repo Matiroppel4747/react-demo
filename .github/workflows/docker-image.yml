@@ -22,7 +22,7 @@ jobs:
 
     - name: print Github
       env:
-        ACTUAL_BRANCH: ${{ $RELEASE_VERSION.refs.heads }}
+        ACTUAL_BRANCH: ${{ RELEASE_VERSION.refs.heads }}
       run: |
         echo $ACTUAL_BRANCH
 
