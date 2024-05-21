@@ -61,8 +61,7 @@ jobs:
         if [[ $ENVIRONMENT == "main" ]]; then
           docker build -t matiroppel88/react-demo .
         elif [[ $ENVIRONMENT == "release" ]]; then
-          echo "NEW_VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
-          docker build -t matiroppel88/react-demo:${{ env.NEW_VERSION }} .
+          docker build -t matiroppel88/react-demo:${{ steps.version.outputs.version }} .
         fi
 
     - name: Push Docker Image
@@ -70,5 +69,5 @@ jobs:
         if [[ $ENVIRONMENT == "main" ]]; then
           docker push matiroppel88/react-demo
         elif [[ $ENVIRONMENT == "release" ]]; then
-          docker push matiroppel88/react-demo:${{ env.NEW_VERSION }}
+          docker push matiroppel88/react-demo:${{ steps.version.outputs.version }}
         fi
