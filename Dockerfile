@@ -1,15 +1,15 @@
 #Use base image for node application 
-FROM node:19-alpine as builder
+#FROM node:19-alpine as builder
 # Set working directory to /app inside the container image 
-WORKDIR /app 
+#WORKDIR /app 
 # Copy app files 
-COPY . .
+#COPY . .
 
 # ====== BUILD ===== 
 # Install dependencies 
-RUN npm ci 
+#RUN npm ci 
 # Build the app 
-RUN npm run build 
+#RUN npm run build 
 
 # ===== RUN =====
 
