@@ -38,7 +38,7 @@ jobs:
       uses: paulhatch/semantic-version@v4.0.3
       with:
         # major (breaking) change, supports regular expressions wrapped with '/'
-        major_pattern: "mayor:"
+        major_pattern: "release:"
         # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
         minor_pattern: "feat:"
         # A string to determine the format of the version output
