@@ -20,7 +20,7 @@ FROM nginx:1.21.0-alpine as production
 ENV NODE_ENV production 
 
 # Copy built assets from `builder` image. The image build on first stage. Copy data from source to destination path 
-COPY --from=builder /app/build /usr/share/nginx/html 
+COPY ./build /usr/share/nginx/html
 
 
 # Expose the port on which the app will be running 
