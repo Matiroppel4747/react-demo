@@ -22,9 +22,9 @@ jobs:
       run: |
         ENVIRONMENT=""
         if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-          ENVIRONMENT=main
+          echo "ENVIRONMENT=main" >> $GITHUB_ENV
         elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
-          ENVIRONMENT=release
+          echo "ENVIRONMENT=release" >> $GITHUB_ENV
         fi
     
     - name: Use Node.js
