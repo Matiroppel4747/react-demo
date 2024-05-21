@@ -61,7 +61,7 @@ jobs:
         if [[ $ENVIRONMENT == "main" ]]; then
           docker build -t matiroppel88/react-demo .
         elif [[ $ENVIRONMENT == "release" ]]; then
-          NEW_VERSION = ${{ steps.version.outputs.version }}
+          echo "NEW_VERSION=${{ steps.version.outputs.version }}" >> $GITHUB_ENV
           docker build -t matiroppel88/react-demo:$NEW_VERSION .
           echo "New version: $NEW_VERSION !!!"          
         fi
