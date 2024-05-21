@@ -2,37 +2,48 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
-  # release:
-  #   types: [created]
+    branches: 
+      - main
+      - 'release/*'
 
 jobs:
-
-  build:
-
+  
+  Build-and-Push:
     runs-on: ubuntu-latest
 
     steps:
+    
     - name: Checkout code 
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - name: Set env
-      run: echo "RELEASE_VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
-
-    - name: print Github
-      run: echo $RELEASE_VERSION
-
+    
+    - name: Set environment
+      run: |
+        ENVIRONMENT = ''
+        if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+          ENVIRONMENT = main
+        elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
+          ENVIRONMENT = release
+        fi
+    
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '16'
+        node-version: '20'
         
     - name: Install dependencies
       run: npm ci --force
-      
-    - name: Build prod
+
+    - name: Build React
       run: npm run build
+    
+    - name: Docker Login
+      env:
+        DOCKER_USER: ${{ secrets.DOCKER_USER }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
     - name: Git Semantic Version
       uses: paulhatch/semantic-version@v4.0.3
@@ -44,26 +55,22 @@ jobs:
         # A string to determine the format of the version output
         format: "${major}.${minor}.${patch}-prerelease${increment}"
       id: version
-      
-    - name: Docker Login
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: |
-        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-        
+    
     - name: Build Docker Image
-      env:
-        NEW_VERSION: ${{ steps.version.outputs.version }}
       run: |
-         docker build -t matiroppel88/react-demo:$NEW_VERSION .
-         docker build -t matiroppel88/react-demo .
-          echo "New version: $NEW_VERSION !!!"
+        if [[ $ENVIRONMENT == "main" ]]; then
+          docker build -t matiroppel88/react-demo .
+        elif [[ $ENVIRONMENT == "release" ]]; then
+          NEW_VERSION = ${{ steps.version.outputs.version }}
+          docker build -t matiroppel88/react-demo:$NEW_VERSION .
+          echo "New version: $NEW_VERSION !!!"          
+        fi
 
     - name: Push Docker Image
-      env:
-        NEW_VERSION: ${{ steps.version.outputs.version }}
       run: |
-         docker push matiroppel88/react-demo:$NEW_VERSION
-         docker push matiroppel88/react-demo
-          echo "New version: $NEW_VERSION !!!"
+        if [[ $ENVIRONMENT == "main" ]]; then
+          docker push matiroppel88/react-demo
+        elif [[ $ENVIRONMENT == "release" ]]; then
+          docker push matiroppel88/react-demo:$NEW_VERSION
+          echo "New version: $NEW_VERSION !!!"          
+        fi
