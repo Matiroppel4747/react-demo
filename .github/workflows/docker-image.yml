@@ -1,73 +1,50 @@
 name: Docker Image CI
-
 on:
   push:
-    branches: 
+    branches:
       - main
       - 'release/*'
-
 jobs:
-  
   Build-and-Push:
     runs-on: ubuntu-latest
-
+    env:
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_PROJECT_NAME: ${{ secrets.DOCKER_PROJECT_NAME }}
     steps:
-    
-    - name: Checkout code 
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set environment
-      run: |
-        ENVIRONMENT=""
-        if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-          echo "ENVIRONMENT=main" >> $GITHUB_ENV
-        elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
-          echo "ENVIRONMENT=release" >> $GITHUB_ENV
-        fi
-    
-    - name: Use Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'
-        
-    - name: Install dependencies
-      run: npm ci --force
-
-    - name: Build React
-      run: npm run build
-    
-    - name: Docker Login
-      env:
-        DOCKER_USER: ${{ secrets.DOCKER_USER }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: |
-        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-
-    - name: Git Semantic Version
-      uses: paulhatch/semantic-version@v4.0.3
-      with:
-        # major (breaking) change, supports regular expressions wrapped with '/'
-        major_pattern: "release:"
-        # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
-        minor_pattern: "feat:"
-        # A string to determine the format of the version output
-        format: "${major}.${minor}.${patch}-prerelease${increment}"
-      id: version
-    
-    - name: Build Docker Image
-      run: |
-        if [[ $ENVIRONMENT == "main" ]]; then
-          docker build -t matiroppel88/react-demo .
-        elif [[ $ENVIRONMENT == "release" ]]; then
-          docker build -t matiroppel88/react-demo:${{ steps.version.outputs.version }} .
-        fi
-
-    - name: Push Docker Image
-      run: |
-        if [[ $ENVIRONMENT == "main" ]]; then
-          docker push matiroppel88/react-demo
-        elif [[ $ENVIRONMENT == "release" ]]; then
-          docker push matiroppel88/react-demo:${{ steps.version.outputs.version }}
-        fi
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci --force
+      - name: Git Semantic Version
+        uses: paulhatch/semantic-version@v4.0.3
+        with:
+          # major (breaking) change, supports regular expressions wrapped with '/'
+          major_pattern: "release:"
+          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
+          minor_pattern: "feat:"
+          # A string to determine the format of the version output
+          format: "${major}.${minor}.${patch}-prerelease${increment}"
+        id: version
+      - name: Build React and Docker Image
+        run: |
+          npm run build
+          docker build -t $DOCKER_USER/$DOCKER_PROJECT_NAME .
+          if [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
+            docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:${{ steps.version.outputs.version }}
+          fi
+      - name: Docker Login
+        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: Push Docker Image
+        run: |
+          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME
+          elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
+            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:${{ steps.version.outputs.version }}
+          fi
