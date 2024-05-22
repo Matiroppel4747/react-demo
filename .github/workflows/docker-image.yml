@@ -1,9 +1,8 @@
 name: Docker Image CI
 on:
   push:
-    branches:
-      - main
-      - 'release/*'
+    tags:
+      - '*'
 jobs:
   Build-and-Push:
     runs-on: ubuntu-latest
