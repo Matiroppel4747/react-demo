@@ -22,29 +22,45 @@ jobs:
           node-version: '20'
       - name: Install dependencies
         run: npm ci --force
-      - name: Git Semantic Version
-        uses: paulhatch/semantic-version@v4.0.3
-        with:
-          # major (breaking) change, supports regular expressions wrapped with '/'
-          major_pattern: "release:"
-          # Same as above except indicating a minor change, supports regular expressions wrapped with '/'
-          minor_pattern: "feat:"
-          # A string to determine the format of the version output
-          format: "${major}.${minor}.${patch}-prerelease${increment}"
-        id: version
+      - name: Get latest tag
+        id: latest_tag
+        uses: actions-ecosystem/action-get-latest-tag@v1
+        if: contains(github.ref, 'hotfix')
+      - name: Extract version from release branch
+        id: release_tag
+        if: contains(github.ref, 'release')
+        run: echo "::set-output name=version::$(echo ${GITHUB_REF#refs/heads/release/} | cut -d'/' -f 2)"
       - name: Build React and Docker Image
         run: |
           npm run build
           docker build -t $DOCKER_USER/$DOCKER_PROJECT_NAME .
-          if [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
-            docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:${{ steps.version.outputs.version }}
+          if [[ $GITHUB_REF == "refs/heads/main" ]]; then
+            NEW_TAG=$(cut -d "/" -f2 <<< ${{ github.event.pull_request.head.ref }})
+            docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
+          elif [[ $GITHUB_REF =~ ^refs/heads/hotfix/.* ]]; then
+            OLD_TAG=${{ steps.latest_tag.outputs.tag }}
+            IFS='.' read -ra PARTS <<< "$OLD_TAG"
+            PARTS[2]=$((PARTS[2] + 1))
+            NEW_TAG="${PARTS[0]}.${PARTS[1]}.${PARTS[2]}"
+            docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
+          elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
+            NEW_TAG=${{ steps.release_tag.outputs.version }}
+            docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:release-$NEW_TAG
           fi
       - name: Docker Login
         run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
       - name: Push Docker Image
         run: |
           if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME
+            NEW_TAG=$(cut -d "/" -f2 <<< ${{ github.event.pull_request.head.ref }})
+            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
+          elif [[ $GITHUB_REF =~ ^refs/heads/hotfix/.* ]]; then
+            OLD_TAG=${{ steps.latest_tag.outputs.tag }}
+            IFS='.' read -ra PARTS <<< "$OLD_TAG"
+            PARTS[2]=$((PARTS[2] + 1))
+            NEW_TAG="${PARTS[0]}.${PARTS[1]}.${PARTS[2]}"
+            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
           elif [[ $GITHUB_REF =~ ^refs/heads/release/.* ]]; then
-            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:${{ steps.version.outputs.version }}
+            NEW_TAG=${{ steps.release_tag.outputs.version }}
+            docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:release-$NEW_TAG
           fi
