@@ -35,7 +35,8 @@ jobs:
           npm run build
           docker build -t $DOCKER_USER/$DOCKER_PROJECT_NAME .
           if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            NEW_TAG=$(cut -d "/" -f2 <<< ${{ github.event.pull_request.head.ref }})
+            BRANCH_REF=${{ github.event.pull_request.head.ref }}
+            NEW_TAG=$(cut -d "/" -f2 <<< $BRANCH_REF)
             docker tag $DOCKER_USER/$DOCKER_PROJECT_NAME $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
           elif [[ $GITHUB_REF =~ ^refs/heads/hotfix/.* ]]; then
             OLD_TAG=${{ steps.latest_tag.outputs.tag }}
@@ -52,7 +53,8 @@ jobs:
       - name: Push Docker Image
         run: |
           if [[ $GITHUB_REF == "refs/heads/main" ]]; then
-            NEW_TAG=$(cut -d "/" -f2 <<< ${{ github.event.pull_request.head.ref }})
+            BRANCH_REF=${{ github.event.pull_request.head.ref }}
+            NEW_TAG=$(cut -d "/" -f2 <<< $BRANCH_REF)
             docker push $DOCKER_USER/$DOCKER_PROJECT_NAME:prod-$NEW_TAG
           elif [[ $GITHUB_REF =~ ^refs/heads/hotfix/.* ]]; then
             OLD_TAG=${{ steps.latest_tag.outputs.tag }}
