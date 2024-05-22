@@ -25,10 +25,10 @@ jobs:
       - name: Get latest tag
         id: latest_tag
         uses: actions-ecosystem/action-get-latest-tag@v1
-        if: contains(github.ref, 'hotfix')
+        if: contains(github.event.pull_request.head.ref, 'hotfix')
       - name: Extract version from release branch
         id: release_tag
-        if: contains(github.ref, 'release')
+        if: contains(github.event.pull_request.head.ref, 'release')
         run: echo "::set-output name=version::$(echo ${GITHUB_REF#refs/heads/release/} | cut -d'/' -f 2)"
       - name: Build React and Docker Image
         run: |
