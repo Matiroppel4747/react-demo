@@ -3,7 +3,6 @@ import classNames from 'classnames'
 import withHeaderItem from '@/utils/hoc/withHeaderItem'
 import Button from '@/components/ui/Button'
 import Dialog from '@/components/ui/Dialog'
-import { apiGetSearchResult } from '@/services/CommonService'
 import useThemeClass from '@/utils/hooks/useThemeClass'
 import navigationIcon from '@/configs/navigation-icon.config'
 import debounce from 'lodash/debounce'
@@ -27,29 +26,7 @@ type SearchResult = {
 const recommendedSearch: SearchResult[] = [
     {
         title: 'Recommended',
-        data: [
-            {
-                title: 'Documentation',
-                url: '/docs/documentation/introduction',
-                icon: 'documentation',
-                category: 'Docs',
-                categoryTitle: 'Docs',
-            },
-            {
-                title: 'Changelog',
-                url: '/docs/changelog',
-                icon: 'changeLog',
-                category: 'Docs',
-                categoryTitle: 'Docs',
-            },
-            {
-                title: 'Button',
-                url: '/ui-components/button',
-                icon: 'common',
-                category: 'Common',
-                categoryTitle: 'UI Components',
-            },
-        ],
+        data: [],
     },
 ]
 
@@ -139,13 +116,7 @@ const _Search = ({ className }: { className?: string }) => {
         if (noResult) {
             setNoResult(false)
         }
-        const respond = await apiGetSearchResult<SearchResult[]>({ query })
-        if (respond.data) {
-            if (respond.data.length === 0) {
-                setNoResult(true)
-            }
-            setSearchResult(respond.data)
-        }
+        // Fetch search result
     }
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {

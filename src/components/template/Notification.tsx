@@ -15,10 +15,6 @@ import {
     HiOutlineBan,
     HiOutlineMailOpen,
 } from 'react-icons/hi'
-import {
-    apiGetNotificationList,
-    apiGetNotificationCount,
-} from '@/services/CommonService'
 import { Link } from 'react-router-dom'
 import isLastChild from '@/utils/isLastChild'
 import useTwColorByName from '@/utils/hooks/useTwColorByName'
@@ -122,8 +118,8 @@ const _Notification = ({ className }: { className?: string }) => {
         NotificationList[]
     >([])
     const [unreadNotification, setUnreadNotification] = useState(false)
-    const [noResult, setNoResult] = useState(false)
-    const [loading, setLoading] = useState(false)
+    const [noResult] = useState(false)
+    const [loading] = useState(false)
 
     const { bgTheme } = useThemeClass()
 
@@ -131,28 +127,17 @@ const _Notification = ({ className }: { className?: string }) => {
 
     const direction = useAppSelector((state) => state.theme.direction)
 
-    const getNotificationCount = useCallback(async () => {
-        const resp = await apiGetNotificationCount()
-        if (resp.data.count > 0) {
-            setNoResult(false)
-            setUnreadNotification(true)
-        } else {
-            setNoResult(true)
-        }
-    }, [setUnreadNotification])
+    const getNotificationCount = async () => {
+        // Fetch Notification count
+    }
 
     useEffect(() => {
         getNotificationCount()
-    }, [getNotificationCount])
+    }, [])
 
-    const onNotificationOpen = useCallback(async () => {
-        if (notificationList.length === 0) {
-            setLoading(true)
-            const resp = await apiGetNotificationList()
-            setLoading(false)
-            setNotificationList(resp.data)
-        }
-    }, [notificationList, setLoading])
+    const onNotificationOpen = async () => {
+        // Fetch NotificationList
+    }
 
     const onMarkAllAsRead = useCallback(() => {
         const list = notificationList.map((item: NotificationList) => {

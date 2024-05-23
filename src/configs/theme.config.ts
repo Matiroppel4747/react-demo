@@ -18,7 +18,7 @@ export type ThemeConfig = {
     controlSize: ControlSize
     cardBordered: boolean
     layout: {
-        type: LayoutType
+        type: 'modern'
         sideNavCollapse: boolean
     }
 }
@@ -28,10 +28,10 @@ export type ThemeConfig = {
  * we recommend to use the configuration that generated from demo.
  */
 export const themeConfig: ThemeConfig = {
-    themeColor: 'indigo',
+    themeColor: 'orange',
     direction: THEME_ENUM.DIR_LTR,
     mode: THEME_ENUM.MODE_LIGHT,
-    primaryColorLevel: 600,
+    primaryColorLevel: 500,
     cardBordered: true,
     panelExpand: false,
     controlSize: 'md',
