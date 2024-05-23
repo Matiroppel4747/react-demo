@@ -7,11 +7,14 @@ export type AppConfig = {
     enableMock: boolean
 }
 
+const apiUrl = import.meta.env.VITE_API_URL;
+const buildMode = import.meta.env.MODE;
+
 const appConfig: AppConfig = {
-    apiPrefix: '/api',
-    authenticatedEntryPath: '/app/sales/dashboard',
+    apiPrefix: buildMode === 'prod' || buildMode === 'uat' ? apiUrl : '/api',
+    authenticatedEntryPath: '/home',
     unAuthenticatedEntryPath: '/sign-in',
-    tourPath: '/app/account/kyc-form',
+    tourPath: '/',
     locale: 'en',
     enableMock: true,
 }
